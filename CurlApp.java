@@ -11,11 +11,12 @@ public class CurlApp {
             .build();
         // ②HttpRequestを生成
         HttpRequest req = HttpRequest.newBuilder()
-            .uri(URI.create("https://java-code.jp/"))
+            .uri(URI.create("http://abehiroshi.la.coocan.jp/"))
             .build();
         // ③リクエストを送信
         cli.sendAsync(req, HttpResponse.BodyHandlers.ofString())
           .thenAccept(res -> {
+            //bodyの部分はheaders, statusCode, uriに変更できる
             System.out.println(res.body());
           });
          
