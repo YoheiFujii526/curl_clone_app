@@ -1,8 +1,14 @@
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CurlApp {
@@ -94,15 +100,33 @@ public class CurlApp {
                 }
                 if (output_file.get()) {
                     try {
-                        File file = new File("output.txt");
+                        // 現在日時を取得
+                        LocalDateTime nowDate = LocalDateTime.now();
+                        // 表示形式を指定
+                        DateTimeFormatter dtf3 =
+                        DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+                        String formatNowDate = dtf3.format(nowDate);
+                        String file_name = "output_" + formatNowDate + ".txt";
+                        System.out.println(file_name); // 202012201332
+                        File file = new File(file_name);
 		
                         //createNewFileメソッドを使用してファイルを作成する
                         if (file.createNewFile()){
                             System.out.println("ファイル作成成功");
+                            // FileWriterクラスを使用する
+                            FileWriter writefile = new FileWriter(file);
+                            // PrintWriterクラスを使用する
+                            PrintWriter pw = new PrintWriter(new BufferedWriter(writefile));
+                            
+                            //ファイルに書き込む
+                            pw.println(res.body());
+
+                            //ファイルを閉じる
+                            pw.close();
                         }else{
                             System.out.println("ファイル作成失敗");
                         }
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         System.err.println("エラー:" + e);
                     }
                     
