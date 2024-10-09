@@ -1,3 +1,4 @@
+import java.io.File;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -13,8 +14,9 @@ public class CurlApp {
         //この変数の値によりサーバーからレスポンスをもらった際の処理を変える
         boolean specify_req_method = false;
         boolean specify_data = false;
-        boolean output_file = false;
-        AtomicBoolean verbose = new AtomicBoolean(false);//ラムダ式内で使えるようにする
+        //ラムダ式内で使えるようにする
+        AtomicBoolean output_file = new AtomicBoolean(false);;
+        AtomicBoolean verbose = new AtomicBoolean(false);
 
         //URL
         String url = "";
@@ -39,7 +41,7 @@ public class CurlApp {
                     System.out.println("コマンドd");
                     break;
                 case "-o":
-                    output_file = true;
+                    output_file.set(true);
                     System.out.println("コマンドo");
                     break;
                 case "-v":
@@ -90,15 +92,26 @@ public class CurlApp {
                     System.out.println("Response Code: " + res.statusCode());
                     System.out.println("Response Headers: " + res.headers());
                 }
+                if (output_file.get()) {
+                    try {
+                        File file = new File("output.txt");
+		
+                        //createNewFileメソッドを使用してファイルを作成する
+                        if (file.createNewFile()){
+                            System.out.println("ファイル作成成功");
+                        }else{
+                            System.out.println("ファイル作成失敗");
+                        }
+                    } catch (Exception e) {
+                        System.err.println("エラー:" + e);
+                    }
+                    
+                }
                 //System.out.println(res.statusCode());
                 System.out.println(res.body());
             });
             
-            // verboseモードでレスポンス情報を表示
-            /*if (verbose) {
-                System.out.println("Response Code: " + response.statusCode());
-                System.out.println("Response Headers: " + response.headers());
-            }*/
+            
 
             
             
