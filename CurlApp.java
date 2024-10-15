@@ -3,14 +3,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.LocalDateTime; // Iteratorのimportを忘れずに
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicBoolean; // Iteratorのimportを忘れずに
 
 
 public class CurlApp {
@@ -30,7 +31,8 @@ public class CurlApp {
 
         //URL
         String url = "";
-        Integer PORT = 80;//ポート番号
+        //HTTPバージョン
+        Integer http_ver = 2;
 
         //コマンドライン引数をチェック
         for (int i = 0; i < args.length; i++) {
@@ -77,13 +79,14 @@ public class CurlApp {
                     break;
             }
         }
-
+        
         HttpRequest req  = HttpRequest.newBuilder().uri(URI.create(url)).build();
         // ①HttpClientを生成
         HttpClient cli = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
-            //.proxy(ProxySelector.of(new InetSocketAddress("proxy.example.com", 80)))
             .build();
+
+
         //GETの場合
         if (mode.equals("GET")) {
             // ②HttpRequestを生成
@@ -107,15 +110,37 @@ public class CurlApp {
             }
         }
 
-
         // Verboseモード: リクエストの詳細を出力
         if (verbose.get()) {
-            StringBuilder req_method = new StringBuilder ("\n> Request method: " + req.method());
-            StringBuilder req_url = new StringBuilder ("\n> Request url: " + url);
-            StringBuilder req_headers = new StringBuilder ("\n> Request headers: " + req.headers() + "\n");
+
+                // URIからホスト名を取得
+                URI uri = URI.create(url);
+                String host = uri.getHost();
+            try {
+            
+    
+                // ホスト名からIPアドレスを取得
+                InetAddress ipAddress = InetAddress.getByName(host);
+                String ip = ipAddress.getHostAddress();
+
+                StringBuilder connect_message = new StringBuilder ("\n* Trying " + ip + "..." + "\n* Connected to " + host);
+                /*System.out.println("*   Trying " + ip + "...");
+                System.out.println("* Connected to " + host);*/
+                print_data.append(connect_message);
+    
+            } catch (Exception e) {
+                System.err.println("IPアドレスでエラー");
+            }
+            StringBuilder req_method = new StringBuilder ("\n> Request method: " + req.method() + " / HTTP/" + http_ver);
+            StringBuilder req_host = new StringBuilder ("\n> Host: " + host);
+            StringBuilder req_content_type = new StringBuilder ("\n> Accept: */*\n>");
+            //StringBuilder req_url = new StringBuilder ("\n> Request url: " + url);
+            //StringBuilder req_headers = new StringBuilder ("\n> Request headers: " + req.headers() + "\n");
             print_data.append(req_method);
-            print_data.append(req_url);
-            print_data.append(req_headers);
+            print_data.append(req_host);
+            print_data.append(req_content_type);
+            //print_data.append(req_url);
+            //print_data.append(req_headers);
         }
 
         
@@ -132,7 +157,7 @@ public class CurlApp {
                     StringBuilder r_head = new StringBuilder ("\n< " + key + " : " + res.headers().map().get(key));
                     header_data.append(r_head);
                 }
-                StringBuilder res_Headers = new StringBuilder ("\nResponse Headers: " + header_data);
+                StringBuilder res_Headers = new StringBuilder ("\n< Response Headers: " + header_data);
                 /*
                 StringBuilder res_previous = new StringBuilder ("\nResponse Previous: " + res.previousResponse());
                 StringBuilder res_request = new StringBuilder ("\nResponse request: " + res.request());
