@@ -7,10 +7,11 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.LocalDateTime;
+import java.time.LocalDateTime; // Iteratorのimportを忘れずに
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-//import java.util.concurrent.atomic.AtomicString;
+
 
 public class CurlApp {
     public static void main(String[] args) throws InterruptedException  {
@@ -29,6 +30,7 @@ public class CurlApp {
 
         //URL
         String url = "";
+        Integer PORT = 80;//ポート番号
 
         //コマンドライン引数をチェック
         for (int i = 0; i < args.length; i++) {
@@ -36,7 +38,7 @@ public class CurlApp {
                 case "-X":
                     //リクエストメソッドを指定する
                     specify_req_method.set(true);
-                    System.out.println("コマンドX");
+                    //System.out.println("コマンドX");
 
                     //GETかPOSTかを決める
                     if(i < args.length - 1){
@@ -54,15 +56,15 @@ public class CurlApp {
                         }
                     }
                     specify_data.set(true);
-                    System.out.println("コマンドd");
+                    //System.out.println("コマンドd");
                     break;
                 case "-o":
                     output_file.set(true);
-                    System.out.println("コマンドo");
+                    //System.out.println("コマンドo");
                     break;
                 case "-v":
                     verbose.set(true);
-                    System.out.println("コマンドv");
+                    //System.out.println("コマンドv");
                     break;
                 default:
                     //コマンドに"-"が付いてない
@@ -80,6 +82,7 @@ public class CurlApp {
         // ①HttpClientを生成
         HttpClient cli = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
+            //.proxy(ProxySelector.of(new InetSocketAddress("proxy.example.com", 80)))
             .build();
         //GETの場合
         if (mode.equals("GET")) {
@@ -103,21 +106,45 @@ public class CurlApp {
                     .build();
             }
         }
+
+
+        // Verboseモード: リクエストの詳細を出力
+        if (verbose.get()) {
+            StringBuilder req_method = new StringBuilder ("\n> Request method: " + req.method());
+            StringBuilder req_url = new StringBuilder ("\n> Request url: " + url);
+            StringBuilder req_headers = new StringBuilder ("\n> Request headers: " + req.headers() + "\n");
+            print_data.append(req_method);
+            print_data.append(req_url);
+            print_data.append(req_headers);
+        }
+
         
         // ③リクエストを送信
         //bodyの部分はheaders, statusCode, uriに変更できる
         cli.sendAsync(req, HttpResponse.BodyHandlers.ofString())
         .thenAccept(res -> {
             if (verbose.get()) {
-                /*System.out.println("Response Code: " + res.statusCode());
-                System.out.println("Response Headers: " + res.headers());
-                System.out.println("Response request: " + res.request());*/
-                StringBuilder res_code = new StringBuilder ("\nResponse Code: " + res.statusCode());
-                StringBuilder res_Headers = new StringBuilder ("\nResponse Headers: " + res.headers());
+                StringBuilder res_code = new StringBuilder ("\n< Response Code: " + res.statusCode());
+                StringBuilder header_data = new StringBuilder ("");//header情報を格納する変数
+                //mapデータ型のkeyとvalueをfor文で出力
+                for (Iterator<String> itr = res.headers().map().keySet().iterator(); itr.hasNext();) {
+                    String key = itr.next();
+                    StringBuilder r_head = new StringBuilder ("\n< " + key + " : " + res.headers().map().get(key));
+                    header_data.append(r_head);
+                }
+                StringBuilder res_Headers = new StringBuilder ("\nResponse Headers: " + header_data);
+                /*
+                StringBuilder res_previous = new StringBuilder ("\nResponse Previous: " + res.previousResponse());
                 StringBuilder res_request = new StringBuilder ("\nResponse request: " + res.request());
+                StringBuilder res_sslSession = new StringBuilder ("\nResponse sslSession: " + res.sslSession());
+                */
                 print_data.append(res_code);
                 print_data.append(res_Headers);
+                /*
+                print_data.append(res_previous);
                 print_data.append(res_request);
+                print_data.append(res_sslSession);
+                */
             }
             if (output_file.get()) {
                 try {
@@ -139,7 +166,7 @@ public class CurlApp {
                         PrintWriter pw = new PrintWriter(new BufferedWriter(writefile));
                         
                         //ファイルに書き込む
-                        pw.println(res.body());
+                        pw.println(print_data + res.body());
                         //ファイルを閉じる
                         pw.close();
                     }else{
@@ -149,8 +176,8 @@ public class CurlApp {
                     System.err.println("エラー:" + e);
                 }
             }
-            //System.out.println(res.statusCode());
-            //System.out.println(res.body());
+            StringBuilder res_body = new StringBuilder ("\n< Response body: \n" + res.body());
+            print_data.append(res_body);
             System.out.println(print_data);
         });
         Thread.sleep(3000);
