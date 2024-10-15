@@ -124,8 +124,6 @@ public class CurlApp {
                 String ip = ipAddress.getHostAddress();
 
                 StringBuilder connect_message = new StringBuilder ("\n* Trying " + ip + "..." + "\n* Connected to " + host);
-                /*System.out.println("*   Trying " + ip + "...");
-                System.out.println("* Connected to " + host);*/
                 print_data.append(connect_message);
     
             } catch (Exception e) {
@@ -134,13 +132,9 @@ public class CurlApp {
             StringBuilder req_method = new StringBuilder ("\n> Request method: " + req.method() + " / HTTP/" + http_ver);
             StringBuilder req_host = new StringBuilder ("\n> Host: " + host);
             StringBuilder req_content_type = new StringBuilder ("\n> Accept: */*\n>");
-            //StringBuilder req_url = new StringBuilder ("\n> Request url: " + url);
-            //StringBuilder req_headers = new StringBuilder ("\n> Request headers: " + req.headers() + "\n");
             print_data.append(req_method);
             print_data.append(req_host);
             print_data.append(req_content_type);
-            //print_data.append(req_url);
-            //print_data.append(req_headers);
         }
 
         
@@ -158,18 +152,8 @@ public class CurlApp {
                     header_data.append(r_head);
                 }
                 StringBuilder res_Headers = new StringBuilder ("\n< Response Headers: " + header_data);
-                /*
-                StringBuilder res_previous = new StringBuilder ("\nResponse Previous: " + res.previousResponse());
-                StringBuilder res_request = new StringBuilder ("\nResponse request: " + res.request());
-                StringBuilder res_sslSession = new StringBuilder ("\nResponse sslSession: " + res.sslSession());
-                */
                 print_data.append(res_code);
                 print_data.append(res_Headers);
-                /*
-                print_data.append(res_previous);
-                print_data.append(res_request);
-                print_data.append(res_sslSession);
-                */
             }
             if (output_file.get()) {
                 try {
